@@ -322,7 +322,7 @@ $${qverbatim}"""
             info.memory_per_cpu = self._convert_memory_str(
                 self._get_element_text(job_element, "hard resource_list.mem_free")
             )
-            info.partition = self._get_element_text(job_element, "queue_name")
+            info.partition = self._get_element_text(job_element, "queue")
             info.time_limit = self._convert_str_to_time(
                 self._get_element_text(job_element, "hard resource_list.h_rt")
             )
