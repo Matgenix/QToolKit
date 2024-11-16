@@ -56,7 +56,7 @@ class PBSIOBase(BaseSchedulerIO, ABC):
         )
 
     @abc.abstractmethod
-    def extract_job_id(self, stdout):
+    def extract_job_id(self, stdout) -> str:
         pass
 
     def parse_cancel_output(self, exit_code, stdout, stderr) -> CancelResult:
@@ -117,8 +117,7 @@ class PBSIOBase(BaseSchedulerIO, ABC):
         pass
 
     def _get_job_cmd(self, job_id: str):
-        cmd = f"qstat -j {job_id}"
-        return cmd
+        return f"qstat -j {job_id}"
 
     def _convert_memory_str(self, memory: str | None) -> int | None:
         if not memory:
@@ -139,21 +138,20 @@ class PBSIOBase(BaseSchedulerIO, ABC):
 
         try:
             v = int(memory)
-        except ValueError:
-            raise OutputParsingError
+        except ValueError as exc:
+            raise OutputParsingError from exc
 
         return v * (1024 ** power_labels[units.lower()])
 
     @staticmethod
-    def _convert_time_to_str(time: int | float | timedelta) -> str:
+    def _convert_time_to_str(time: float | timedelta) -> str:
         if not isinstance(time, timedelta):
             time = timedelta(seconds=time)
 
         hours, remainder = divmod(int(time.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
 
-        time_str = f"{hours}:{minutes}:{seconds}"
-        return time_str
+        return f"{hours}:{minutes}:{seconds}"
 
     def _convert_qresources(self, resources: QResources) -> dict:
         header_dict = {}

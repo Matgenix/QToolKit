@@ -4,7 +4,17 @@ import re
 from datetime import timedelta
 from typing import ClassVar
 
-from qtoolkit.core.data_objects import QJob, QJobInfo, QState, QSubState
+from qtoolkit.core.data_objects import (
+    CancelResult,
+    CancelStatus,
+    ProcessPlacement,
+    QJob,
+    QJobInfo,
+    QResources,
+    QState,
+    QSubState,
+    UnsupportedResourcesError,
+)
 from qtoolkit.core.exceptions import OutputParsingError
 from qtoolkit.io.pbs_base import PBSIOBase
 
@@ -92,8 +102,10 @@ $${qverbatim}"""
     CANCEL_CMD: str | None = "qdel"
     system_name: str = "PBS"
     default_unit: str = "mb"
-    power_labels: dict = {"kb": 0, "mb": 1, "gb": 2, "tb": 3}
-    _qresources_mapping: dict = {
+    power_labels: ClassVar = {"kb": 0, "mb": 1, "gb": 2, "tb": 3}
+    # helper attribute to match the values defined in QResources and
+    # the dictionary that should be passed to the template
+    _qresources_mapping: ClassVar = {
         "queue_name": "queue",
         "job_name": "job_name",
         "account": "account",
@@ -306,18 +318,6 @@ $${qverbatim}"""
             raise OutputParsingError from exc
 
         return v * (1024 ** power_labels[units])
-
-    # helper attribute to match the values defined in QResources and
-    # the dictionary that should be passed to the template
-    _qresources_mapping: ClassVar = {
-        "queue_name": "queue",
-        "job_name": "job_name",
-        "account": "account",
-        "priority": "priority",
-        "output_filepath": "qout_path",
-        "error_filepath": "qerr_path",
-        "project": "group_list",
-    }
 
     @staticmethod
     def _convert_time_to_str(time: int | float | timedelta) -> str:  # noqa: PYI041

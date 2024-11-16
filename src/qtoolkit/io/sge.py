@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import xml.dom.minidom
 import xml.parsers.expat
+from typing import ClassVar
 
 from qtoolkit.core.data_objects import QJob, QJobInfo, QResources, QState, QSubState
 from qtoolkit.core.exceptions import CommandFailedError, OutputParsingError
@@ -127,8 +128,8 @@ $${qverbatim}"""
     CANCEL_CMD: str | None = "qdel"
     system_name: str = "SGE"
     default_unit: str = "M"
-    power_labels: dict = {"k": 0, "m": 1, "g": 2, "t": 3}
-    _qresources_mapping: dict = {
+    power_labels: ClassVar = {"k": 0, "m": 1, "g": 2, "t": 3}
+    _qresources_mapping: ClassVar = {
         "queue_name": "queue",
         "job_name": "job_name",
         "priority": "priority",
@@ -141,13 +142,13 @@ $${qverbatim}"""
         super().__init__()
         self.get_job_executable = get_job_executable
 
-    def extract_job_id(self, stdout):
+    def extract_job_id(self, stdout) -> str:
         match = re.search(r'Your job (\d+) \(".*?"\) has been submitted', stdout)
         if not match:
             raise OutputParsingError("Failed to parse job ID from stdout")
         return match.group(1)
 
-    def extract_job_id_from_cancel(self, stderr):
+    def extract_job_id_from_cancel(self, stderr) -> str:
         match = re.search(r"qdel: job (\d+) deleted", stderr)
         if not match:
             raise OutputParsingError("Failed to parse job ID from stdout")
@@ -190,7 +191,7 @@ $${qverbatim}"""
 
         # Check if stdout is in XML format
         try:
-            xmldata = xml.dom.minidom.parseString(stdout)
+            xmldata = xml.dom.minidom.parseString(stdout)  # noqa: S318
             job_info = xmldata.getElementsByTagName("job_list")[0]
             job_id = job_info.getElementsByTagName("JB_job_number")[
                 0
@@ -246,7 +247,7 @@ $${qverbatim}"""
 
             state_str = job_info.get("state")
             sge_state = SGEState(state_str) if state_str else None
-            job_state = sge_state.qstate
+            job_state = sge_state.qstate if sge_state else None
 
             return QJob(
                 name=job_info.get("job_name"),
@@ -290,9 +291,9 @@ $${qverbatim}"""
             stderr = stderr.decode()
 
         try:
-            xmldata = xml.dom.minidom.parseString(stdout)
-        except xml.parsers.expat.ExpatError:
-            raise OutputParsingError("XML parsing of stdout failed")
+            xmldata = xml.dom.minidom.parseString(stdout)  # noqa: S318
+        except xml.parsers.expat.ExpatError as exc:
+            raise OutputParsingError("XML parsing of stdout failed") from exc
 
         job_elements = xmldata.getElementsByTagName("job_list")
         jobs_list = []
@@ -304,10 +305,10 @@ $${qverbatim}"""
 
             try:
                 sge_job_state = SGEState(job_state_string)
-            except ValueError:
+            except ValueError as exc:
                 raise OutputParsingError(
                     f"Unknown job state {job_state_string} for job id {qjob.job_id}"
-                )
+                ) from exc
 
             qjob.sub_state = sge_job_state
             qjob.state = sge_job_state.qstate
@@ -351,13 +352,14 @@ $${qverbatim}"""
 
         try:
             return int(hours) * 3600 + int(minutes) * 60 + int(seconds)
-        except ValueError:
-            raise OutputParsingError(f"Invalid time format: {time_str}")
+        except ValueError as exc:
+            raise OutputParsingError(f"Invalid time format: {time_str}") from exc
 
     def _add_soft_walltime(self, header_dict: dict, resources: QResources):
-        header_dict["soft_walltime"] = self._convert_time_to_str(
-            resources.time_limit * 0.99
-        )
+        if resources.time_limit is not None:
+            header_dict["soft_walltime"] = self._convert_time_to_str(
+                resources.time_limit * 0.99
+            )
 
     @property
     def supported_qresources_keys(self) -> list:
