@@ -303,9 +303,6 @@ $${qverbatim}"""
             # Handle job_list.xml structure
             job_elements = xmldata.getElementsByTagName("element")
         else:
-            # Debugging: Print the root element and XML content if no jobs found
-            print("Root element:", xmldata.documentElement.tagName)
-            print("XML data:", stdout)
             raise OutputParsingError("No recognizable job elements found in XML data")
 
         for job_element in job_elements:
