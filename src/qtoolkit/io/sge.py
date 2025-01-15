@@ -376,9 +376,3 @@ $${qverbatim}"""
         header_dict["soft_walltime"] = self._convert_time_to_str(
             resources.time_limit * 0.99
         )
-
-    @property
-    def supported_qresources_keys(self) -> list:
-        supported = super().supported_qresources_keys
-        supported += ["memory_per_thread", "gpus_per_job"]
-        return supported

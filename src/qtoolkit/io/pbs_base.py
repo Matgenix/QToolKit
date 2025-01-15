@@ -241,6 +241,7 @@ class PBSIOBase(BaseSchedulerIO, ABC):
             "process_placement",
             "nodes",
             "threads_per_process",
+            "memory_per_thread",
             "email_address",
             "scheduler_kwargs",
         ]
