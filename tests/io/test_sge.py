@@ -224,7 +224,6 @@ class TestSGEIO:
         res = QResources(
             njobs=1,
             processes=24,
-            gpus_per_job=4,
         )
         header_dict = sge_io.check_convert_qresources(resources=res)
         assert header_dict == {
@@ -246,6 +245,7 @@ class TestSGEIO:
         maximalist_qresources.project = None
         maximalist_qresources.account = None
         maximalist_qresources.qos = None
+        maximalist_qresources.gpus_per_job = None
         maximalist_qresources.process_placement = ProcessPlacement.EVENLY_DISTRIBUTED
 
         # Set `processes` to None to avoid the conflict
