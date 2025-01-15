@@ -260,11 +260,11 @@ $${qverbatim}"""
                 ),
             )
 
-    def _get_element_text(self, parent, tag_name, default=None):
+    def _get_element_text(self, parent, tag_name):
         elements = parent.getElementsByTagName(tag_name)
-        if elements and elements[0].childNodes:
+        if elements:
             return elements[0].childNodes[0].data.strip()
-        return default
+        return None
 
     def _safe_int(self, value: str | None) -> int | None:
         if value is None:
@@ -294,69 +294,41 @@ $${qverbatim}"""
         except xml.parsers.expat.ExpatError:
             raise OutputParsingError("XML parsing of stdout failed")
 
+        job_elements = xmldata.getElementsByTagName("job_list")
         jobs_list = []
-        # Determine the structure of the XML
-        if xmldata.getElementsByTagName("job_list"):
-            # Handle job_list_u.xml structure
-            job_elements = xmldata.getElementsByTagName("job_list")
-        elif xmldata.getElementsByTagName("element"):
-            # Handle job_list.xml structure
-            job_elements = xmldata.getElementsByTagName("element")
-        else:
-            raise OutputParsingError("No recognizable job elements found in XML data")
 
         for job_element in job_elements:
             qjob = QJob()
-            qjob.job_id = self._get_element_text(
-                job_element, "JB_job_number", default="Unknown"
-            )
-            qjob.name = self._get_element_text(
-                job_element, "JB_job_name", default="Unknown"
-            )
-            qjob.username = self._get_element_text(
-                job_element, "JB_owner", default="Unknown"
-            )
-
-            # Determine job state
-            job_state_string = self._get_element_text(
-                job_element, "state", default=None
-            )
-            if job_state_string is None:
-                job_state_string = self._get_element_text(
-                    job_element, "JAT_status", default="Unknown"
-                )
+            qjob.job_id = self._get_element_text(job_element, "JB_job_number")
+            job_state_string = self._get_element_text(job_element, "state")
 
             try:
                 sge_job_state = SGEState(job_state_string)
-                qjob.sub_state = sge_job_state
-                qjob.state = sge_job_state.qstate
             except ValueError:
-                print(
-                    f"Unknown job state: {job_state_string} for job ID: {qjob.job_id}"
+                raise OutputParsingError(
+                    f"Unknown job state {job_state_string} for job id {qjob.job_id}"
                 )
-                qjob.sub_state = None
-                qjob.state = None
 
-            # Collect additional job information
+            qjob.sub_state = sge_job_state
+            qjob.state = sge_job_state.qstate
+            qjob.username = self._get_element_text(job_element, "JB_owner")
+            qjob.name = self._get_element_text(job_element, "JB_name")
+
             info = QJobInfo()
             info.nodes = self._safe_int(
-                self._get_element_text(job_element, "num_nodes", default="0")
+                self._get_element_text(job_element, "num_nodes")
             )
-            info.cpus = self._safe_int(
-                self._get_element_text(job_element, "num_proc", default="0")
-            )
+            info.cpus = self._safe_int(self._get_element_text(job_element, "num_proc"))
             info.memory_per_cpu = self._convert_memory_str(
-                self._get_element_text(
-                    job_element, "hard resource_list.mem_free", default="0"
-                )
+                self._get_element_text(job_element, "hard resource_list.mem_free")
             )
+            info.partition = self._get_element_text(job_element, "queue")
             info.time_limit = self._convert_str_to_time(
-                self._get_element_text(
-                    job_element, "hard resource_list.h_rt", default="0"
-                )
+                self._get_element_text(job_element, "hard resource_list.h_rt")
             )
 
             qjob.info = info
+
             jobs_list.append(qjob)
 
         return jobs_list
