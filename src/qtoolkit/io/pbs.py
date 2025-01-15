@@ -120,6 +120,10 @@ $${qverbatim}"""
     def _get_job_ids_flag(self, job_ids_str: str) -> str:
         return job_ids_str
 
+    def _get_job_cmd(self, job_id: str):
+        cmd = f"qstat -f {job_id}"
+        return cmd
+
     def parse_jobs_list_output(self, exit_code, stdout, stderr) -> list[QJob]:
         if isinstance(stdout, bytes):
             stdout = stdout.decode()

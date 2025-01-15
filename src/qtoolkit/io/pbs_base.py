@@ -116,9 +116,9 @@ class PBSIOBase(BaseSchedulerIO, ABC):
     def _get_job_ids_flag(self, job_ids_str: str) -> str:
         pass
 
-    def _get_job_cmd(self, job_id: str):
-        cmd = f"qstat -j {job_id}"
-        return cmd
+    @abc.abstractmethod
+    def _get_job_cmd(self, job_id: str) -> str:
+        pass
 
     def _convert_memory_str(self, memory: str | None) -> int | None:
         if not memory:

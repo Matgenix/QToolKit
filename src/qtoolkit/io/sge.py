@@ -280,6 +280,10 @@ $${qverbatim}"""
     def _get_job_ids_flag(self, job_ids_str: str) -> str:
         return f"-j {job_ids_str}"
 
+    def _get_job_cmd(self, job_id: str):
+        cmd = f"qstat -j {job_id}"
+        return cmd
+
     def parse_jobs_list_output(self, exit_code, stdout, stderr) -> list[QJob]:
         if exit_code != 0:
             msg = f"command {self.get_job_executable or 'qacct'} failed: {stderr}"
