@@ -96,10 +96,14 @@ class TestSGEIO:
         assert job == job_ref
 
     def test_get_job_cmd(self, sge_io):
-        cmd = sge_io._get_job_cmd(3)
-        assert cmd == "qstat -j -xml 3"
-        cmd = sge_io._get_job_cmd("56")
-        assert cmd == "qstat -j -xml 56"
+        with pytest.raises(
+            NotImplementedError, match=r"Querying by job IDs is not supported for SGE."
+        ):
+            sge_io._get_job_cmd(3)
+        with pytest.raises(
+            NotImplementedError, match=r"Querying by job IDs is not supported for SGE."
+        ):
+            sge_io._get_job_cmd("56")
 
     def test_get_jobs_list_cmd(self, sge_io):
         with pytest.raises(
