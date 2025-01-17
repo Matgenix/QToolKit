@@ -120,7 +120,7 @@ $${qverbatim}"""
             command.append(f"-u {user}")
 
         if job_ids:
-            job_ids_str = ",".join(job_ids)
+            job_ids_str = " ".join(job_ids)
             command.append(self._get_job_ids_flag(job_ids_str))
 
         return " ".join(command)
@@ -132,14 +132,14 @@ $${qverbatim}"""
         return None
 
     def _get_qstat_base_command(self) -> list[str]:
-        return ["qstat", "-f"]
+        return ["qstat", "-f", "-w"]
+
+    def _get_job_cmd(self, job_id: str):
+        cmd = f"qstat -f -w {job_id}"
+        return cmd
 
     def _get_job_ids_flag(self, job_ids_str: str) -> str:
         return job_ids_str
-
-    def _get_job_cmd(self, job_id: str):
-        cmd = f"qstat -f {job_id}"
-        return cmd
 
     def parse_jobs_list_output(self, exit_code, stdout, stderr) -> list[QJob]:
         if isinstance(stdout, bytes):
@@ -272,3 +272,9 @@ $${qverbatim}"""
             raise OutputParsingError()
 
         return time[3] * 86400 + time[2] * 3600 + time[1] * 60 + time[0]
+
+    def sanitize_options(self, options):
+        if "job_name" in options:
+            options = dict(options)
+            options["job_name"] = re.sub(r"[^a-zA-Z0-9_\-+.]", "_", options["job_name"])
+        return options

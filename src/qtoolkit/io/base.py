@@ -48,6 +48,8 @@ class BaseSchedulerIO(QTKObject, abc.ABC):
 
     shebang: str = "#!/bin/bash"
 
+    sanitize_job_name: bool = False
+
     def get_submission_script(
         self,
         commands: str | list[str],
@@ -76,8 +78,7 @@ class BaseSchedulerIO(QTKObject, abc.ABC):
         options = options or {}
 
         if isinstance(options, QResources):
-            if not options.check_empty():
-                options = self.check_convert_qresources(options)
+            options = self.check_convert_qresources(options)
 
         template = QTemplate(self.header_template)
 
@@ -106,6 +107,7 @@ class BaseSchedulerIO(QTKObject, abc.ABC):
                     msg += f" {replacements} instead of '{extra_val}'."
             raise ValueError(msg)
 
+        options = self.sanitize_options(options)
         unclean_header = template.safe_substitute(options)
         # Remove lines with leftover $$.
         clean_header = []
@@ -241,3 +243,10 @@ class BaseSchedulerIO(QTKObject, abc.ABC):
     @abc.abstractmethod
     def parse_jobs_list_output(self, exit_code, stdout, stderr) -> list[QJob]:
         pass
+
+    def sanitize_options(self, options):
+        """
+        A function to sanitize the values in the options used to generate the
+        header. Subclasses should implement their own sanitizations.
+        """
+        return options
