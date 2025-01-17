@@ -87,22 +87,11 @@ class PBSIOBase(BaseSchedulerIO, ABC):
     def extract_job_id_from_cancel(self, stderr):
         pass
 
+    @abc.abstractmethod
     def _get_jobs_list_cmd(
         self, job_ids: list[str] | None = None, user: str | None = None
     ) -> str:
-        if user and job_ids:
-            self._check_user_and_job_ids_conflict()
-
-        command = self._get_qstat_base_command()
-
-        if user:
-            command.append(f"-u {user}")
-
-        if job_ids:
-            job_ids_str = ",".join(job_ids)
-            command.append(self._get_job_ids_flag(job_ids_str))
-
-        return " ".join(command)
+        pass
 
     def _check_user_and_job_ids_conflict(self):
         # Use system_name for more informative error messages

@@ -108,6 +108,23 @@ $${qverbatim}"""
         # PBS doesn't return the job ID if successfully canceled, so return None
         return None
 
+    def _get_jobs_list_cmd(
+        self, job_ids: list[str] | None = None, user: str | None = None
+    ) -> str:
+        if user and job_ids:
+            self._check_user_and_job_ids_conflict()
+
+        command = self._get_qstat_base_command()
+
+        if user:
+            command.append(f"-u {user}")
+
+        if job_ids:
+            job_ids_str = ",".join(job_ids)
+            command.append(self._get_job_ids_flag(job_ids_str))
+
+        return " ".join(command)
+
     def parse_job_output(self, exit_code, stdout, stderr) -> QJob | None:
         out = self.parse_jobs_list_output(exit_code, stdout, stderr)
         if out:
