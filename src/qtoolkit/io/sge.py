@@ -313,7 +313,7 @@ $${qverbatim}"""
 
         # Ensure <job_info> elements exist
         # (==> xml file created via -u option,
-        # tag doesn't exit when created with -j option)
+        # tag doesn't exist when created with -j option)
         root_element = xmldata.documentElement
         if root_element.tagName != "job_info":
             raise OutputParsingError(
