@@ -281,7 +281,7 @@ $${qverbatim}"""
         return f"-j {job_ids_str}"
 
     def _get_job_cmd(self, job_id: str):
-        cmd = f"qstat -j {job_id}"
+        cmd = f"qstat -j -xml {job_id}"
         return cmd
 
     def parse_jobs_list_output(self, exit_code, stdout, stderr) -> list[QJob]:
