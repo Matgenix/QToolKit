@@ -291,11 +291,10 @@ $${qverbatim}"""
         return ["qstat", "-ext", "-urg", "-xml"]
 
     def _get_job_ids_flag(self, job_ids_str: str) -> str:
-        return f"-j {job_ids_str}"
+        raise NotImplementedError("Querying by job IDs is not supported for SGE.")
 
     def _get_job_cmd(self, job_id: str):
-        cmd = f"qstat -j -xml {job_id}"
-        return cmd
+        raise NotImplementedError("Querying by job IDs is not supported for SGE.")
 
     def parse_jobs_list_output(self, exit_code, stdout, stderr) -> list[QJob]:
         if exit_code != 0:
